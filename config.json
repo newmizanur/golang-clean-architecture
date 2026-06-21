@@ -19,5 +19,11 @@
   "jwt": {
     "secret": "change-me",
     "ttl_minutes": 1440
+  },
+  "grpc": {
+    "port": 50051
+  },
+  "graphql": {
+    "port": 4000
   }
 }
