@@ -141,6 +141,44 @@ task graphql:gen
 make graphql-gen
 ```
 
+## GraphQL queries and mutations
+
+All queries and mutations are in [`graphql.http`](graphql.http), compatible with the **REST Client** extension (VS Code), **IntelliJ HTTP Client**, and **Bruno**.
+
+Get a token from `api.http → Login`, paste it into `graphql.http` at `@token`, then run any request directly from the file.
+
+The GraphiQL UI is available at http://localhost:4000/ when `cmd/graphql` is running. Add the `Authorization` header in the **Headers** panel (bottom-left in GraphiQL):
+
+```
+Authorization: Bearer <token>
+```
+
+### Query examples (for curl / reference)
+
+**List items:**
+```sh
+curl -s -X POST http://localhost:4000/query \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{"query":"{ items(filter:{page:1,size:5}){ items{id name stock currency{code symbol}} total } }"}' | jq .
+```
+
+**Get item by ID:**
+```sh
+curl -s -X POST http://localhost:4000/query \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{"query":"{ item(id:\"1\"){ id name sku stock currency{code symbol decimalPlaces} } }"}' | jq .
+```
+
+**Create item:**
+```sh
+curl -s -X POST http://localhost:4000/query \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{"query":"mutation { createItem(input:{name:\"Keyboard\",sku:\"KB-001\",currency:\"USD\",stock:10}){ id name currency{code symbol} } }"}' | jq .
+```
+
 ## Verifying the gRPC server (grpcurl)
 
 Install grpcurl: `brew install grpcurl`
