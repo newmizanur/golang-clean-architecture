@@ -12,9 +12,18 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// ItemUseCasePort is the subset of ItemUseCase methods used by ItemGRPCServer.
+type ItemUseCasePort interface {
+	Create(ctx context.Context, req *dto.CreateItemRequest) (*dto.CreateItemResponse, error)
+	Search(ctx context.Context, req *dto.SearchItemRequest) ([]dto.CreateItemResponse, int64, error)
+	Get(ctx context.Context, req *dto.GetItemRequest) (*dto.CreateItemResponse, error)
+	Update(ctx context.Context, req *dto.UpdateItemRequest) (*dto.CreateItemResponse, error)
+	Delete(ctx context.Context, req *dto.DeleteItemRequest) error
+}
+
 type ItemGRPCServer struct {
 	pb.UnimplementedItemServiceServer
-	ItemUseCase *usecase.ItemUseCase
+	ItemUseCase ItemUseCasePort
 }
 
 func NewItemGRPCServer(uc *usecase.ItemUseCase) *ItemGRPCServer {
