@@ -51,6 +51,33 @@ tasks:
     cmds:
       - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o bin/web-linux-amd64 ./cmd/web
 
+  # ── Test ──────────────────────────────────────────────────────────────────────
+
+  test:
+    desc: Run all unit tests
+    cmds:
+      - go test ./internal/... -v
+
+  test:grpc:
+    desc: Run gRPC server unit tests only
+    cmds:
+      - go test ./internal/delivery/grpc/... -v
+
+  test:http:
+    desc: Run HTTP controller unit tests only
+    cmds:
+      - go test ./internal/delivery/http/... -v
+
+  test:graphql:
+    desc: Run GraphQL resolver unit tests only
+    cmds:
+      - go test ./internal/delivery/graphql/resolver/... -v
+
+  test:dataloader:
+    desc: Run DataLoader unit tests only
+    cmds:
+      - go test ./internal/delivery/graphql/dataloader/... -v
+
   # ── Codegen ───────────────────────────────────────────────────────────────────
 
   proto:gen:

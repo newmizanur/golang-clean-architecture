@@ -3,6 +3,7 @@ GOOSE_FLAGS = GOOSE_DRIVER=postgres GOOSE_DBSTRING="postgres://postgres:postgres
 .PHONY: run run-grpc run-graphql \
         build build-grpc build-graphql build-all build-amazon-linux \
         proto-gen graphql-gen \
+        test test-grpc test-http test-graphql test-dataloader \
         postgres-docker tools-install \
         goose-up goose-down goose-create
 
@@ -40,6 +41,28 @@ build-all: build build-grpc build-graphql
 ## Static build for Amazon Linux (linux/amd64) → bin/web-linux-amd64
 build-amazon-linux:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o bin/web-linux-amd64 ./cmd/web
+
+# ── Test ───────────────────────────────────────────────────────────────────────
+
+## Run all unit tests
+test:
+	go test ./internal/... -v
+
+## Run gRPC server unit tests only
+test-grpc:
+	go test ./internal/delivery/grpc/... -v
+
+## Run HTTP controller unit tests only
+test-http:
+	go test ./internal/delivery/http/... -v
+
+## Run GraphQL resolver unit tests only
+test-graphql:
+	go test ./internal/delivery/graphql/resolver/... -v
+
+## Run DataLoader unit tests only
+test-dataloader:
+	go test ./internal/delivery/graphql/dataloader/... -v
 
 # ── Codegen ────────────────────────────────────────────────────────────────────
 
