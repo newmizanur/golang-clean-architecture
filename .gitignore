@@ -2,7 +2,7 @@
 .vscode
 .zed
 .claude
-docs
+docs/superpowers/
 bin/
 /graphql
 /grpc
