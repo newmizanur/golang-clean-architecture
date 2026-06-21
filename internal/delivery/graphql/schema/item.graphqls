@@ -1,0 +1,44 @@
+type Currency {
+  code: String!
+  symbol: String!
+  decimalPlaces: Int!
+}
+
+type Item {
+  id: ID!
+  name: String!
+  sku: String!
+  stock: Int!
+  currency: Currency!
+  createdAt: String
+  updatedAt: String
+}
+
+type ItemPage {
+  items: [Item!]!
+  total: Int!
+}
+
+input ListItemsInput {
+  name: String
+  sku: String
+  sort: String
+  page: Int!
+  size: Int!
+}
+
+type Query {
+  item(id: ID!): Item
+  items(filter: ListItemsInput!): ItemPage!
+}
+
+input CreateItemInput {
+  name: String!
+  sku: String!
+  currency: String!
+  stock: Int!
+}
+
+type Mutation {
+  createItem(input: CreateItemInput!): Item!
+}
