@@ -8,6 +8,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"golang-clean-architecture/internal/config"
+	"golang-clean-architecture/internal/delivery/graphql/dataloader"
 	"golang-clean-architecture/internal/delivery/graphql/graph"
 	"golang-clean-architecture/internal/delivery/graphql/resolver"
 	pb "golang-clean-architecture/internal/delivery/grpc/pb"
@@ -44,9 +45,16 @@ func main() {
 		})
 	}
 
+	loaderMiddleware := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := dataloader.WithLoader(r.Context())
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+
 	mux := http.NewServeMux()
 	mux.Handle("/", playground.Handler("GraphQL Playground", "/query"))
-	mux.Handle("/query", jwtMiddleware(srv))
+	mux.Handle("/query", jwtMiddleware(loaderMiddleware(srv)))
 
 	port := viperConfig.GetInt("graphql.port")
 	log.Infof("GraphQL server listening on :%d (playground at http://localhost:%d/)", port, port)

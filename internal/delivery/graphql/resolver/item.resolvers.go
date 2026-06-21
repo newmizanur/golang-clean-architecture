@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"golang-clean-architecture/internal/delivery/graphql/currencyservice"
+	"golang-clean-architecture/internal/delivery/graphql/dataloader"
 	"golang-clean-architecture/internal/delivery/graphql/graph"
 	"golang-clean-architecture/internal/delivery/graphql/graph/model"
 	pb "golang-clean-architecture/internal/delivery/grpc/pb"
@@ -81,17 +82,20 @@ func (r *mutationResolver) CreateItem(ctx context.Context, input model.CreateIte
 // Item field resolver — Currency (NAIVE: one call per item = N+1)
 
 func (r *itemResolver) Currency(ctx context.Context, obj *model.Item) (*model.Currency, error) {
-	// Called once PER item when resolving Item.currency in a list.
-	// With 20 items this means 20 separate GetCurrency calls — the N+1 problem.
-	c, err := currencyservice.GetCurrency(ctx, obj.CurrencyCode)
+	loader := dataloader.LoaderFrom(ctx)
+	if loader == nil {
+		// Fallback for contexts without middleware (e.g. tests).
+		c, err := currencyservice.GetCurrency(ctx, obj.CurrencyCode)
+		if err != nil {
+			return nil, err
+		}
+		return &model.Currency{Code: c.Code, Symbol: c.Symbol, DecimalPlaces: c.DecimalPlaces}, nil
+	}
+	c, err := loader.Load(ctx, obj.CurrencyCode)
 	if err != nil {
 		return nil, err
 	}
-	return &model.Currency{
-		Code:          c.Code,
-		Symbol:        c.Symbol,
-		DecimalPlaces: c.DecimalPlaces,
-	}, nil
+	return &model.Currency{Code: c.Code, Symbol: c.Symbol, DecimalPlaces: c.DecimalPlaces}, nil
 }
 
 // Helper
