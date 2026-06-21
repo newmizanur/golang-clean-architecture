@@ -27,7 +27,7 @@ The `Item` domain is the reference implementation. Every step below mirrors what
 | 6 | Add Go model structs | `internal/delivery/graphql/graph/model/models.go` |
 | 7 | Bind models in gqlgen config | `internal/delivery/graphql/gqlgen.yml` |
 | 8 | Re-run codegen | `graph/generated.go` + resolver stubs (via `make graphql-gen`) |
-| 9 | Add the gRPC client field to root Resolver | `internal/delivery/graphql/resolver/resolver.go` |
+| 9 | Add the gRPC client field to the existing root Resolver struct | `internal/delivery/graphql/resolver/resolver.go` |
 | 10 | Implement the resolver stubs | `internal/delivery/graphql/resolver/product.resolvers.go` |
 | 11 | Wire the client in the GraphQL entrypoint | `cmd/graphql/main.go` |
 
@@ -310,9 +310,13 @@ gqlgen will:
 - Regenerate `graph/generated.go` with the new Product resolver interfaces
 - Create `resolver/product.resolvers.go` with stub methods
 
-### Step 9: Add ProductClient to the root Resolver
+### Step 9: Add ProductClient to the existing root Resolver struct
 
-Open `internal/delivery/graphql/resolver/resolver.go` and add the new client field:
+`resolver.go` already exists with `ItemClient` — `Item` was the first domain so its
+field was created together with the struct. For every domain added after that, you
+extend the existing struct here.
+
+Open `internal/delivery/graphql/resolver/resolver.go` and add the new field:
 
 ```go
 type Resolver struct {
