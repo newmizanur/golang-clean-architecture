@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package item;
+option go_package = "golang-clean-architecture/internal/delivery/grpc/pb";
+
+service ItemService {
+  rpc GetItem(GetItemRequest) returns (ItemResponse);
+  rpc ListItems(ListItemsRequest) returns (ListItemsResponse);
+  rpc CreateItem(CreateItemRequest) returns (ItemResponse);
+  rpc UpdateItem(UpdateItemRequest) returns (ItemResponse);
+  rpc DeleteItem(DeleteItemRequest) returns (DeleteItemResponse);
+}
+
+message GetItemRequest  { int64 id = 1; }
+
+message ListItemsRequest {
+  string name = 1;
+  string sku  = 2;
+  string sort = 3;
+  int32  page = 4;
+  int32  size = 5;
+}
+
+message ListItemsResponse {
+  repeated ItemResponse items = 1;
+  int64                 total = 2;
+}
+
+message CreateItemRequest {
+  string name     = 1;
+  string sku      = 2;
+  string currency = 3;
+  int32  stock    = 4;
+}
+
+message UpdateItemRequest {
+  int64  id       = 1;
+  string name     = 2;
+  string sku      = 3;
+  string currency = 4;
+  int32  stock    = 5;
+}
+
+message DeleteItemRequest  { int64 id = 1; }
+message DeleteItemResponse { bool success = 1; }
+
+message ItemResponse {
+  int64  id              = 1;
+  string name            = 2;
+  string sku             = 3;
+  string currency        = 4;
+  int32  stock           = 5;
+  int64  created_at_unix = 6;
+  int64  updated_at_unix = 7;
+}
