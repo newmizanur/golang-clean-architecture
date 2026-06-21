@@ -1,10 +1,10 @@
 package http
 
 import (
+	"context"
 	"golang-clean-architecture/internal/apperror"
 	httpresponse "golang-clean-architecture/internal/delivery/http/response"
 	"golang-clean-architecture/internal/dto"
-	"golang-clean-architecture/internal/usecase"
 	"math"
 	"strconv"
 
@@ -12,12 +12,21 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// ItemUseCasePort is the subset of ItemUseCase methods used by ItemController.
+type ItemUseCasePort interface {
+	Create(ctx context.Context, req *dto.CreateItemRequest) (*dto.CreateItemResponse, error)
+	Search(ctx context.Context, req *dto.SearchItemRequest) ([]dto.CreateItemResponse, int64, error)
+	Get(ctx context.Context, req *dto.GetItemRequest) (*dto.CreateItemResponse, error)
+	Update(ctx context.Context, req *dto.UpdateItemRequest) (*dto.CreateItemResponse, error)
+	Delete(ctx context.Context, req *dto.DeleteItemRequest) error
+}
+
 type ItemController struct {
-	ItemUseCase *usecase.ItemUseCase
+	ItemUseCase ItemUseCasePort
 	Log         *logrus.Logger
 }
 
-func NewItemController(useCase *usecase.ItemUseCase, log *logrus.Logger) *ItemController {
+func NewItemController(useCase ItemUseCasePort, log *logrus.Logger) *ItemController {
 	return &ItemController{
 		ItemUseCase: useCase,
 		Log:         log,
