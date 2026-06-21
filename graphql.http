@@ -3,7 +3,7 @@
 # Get a token first via api.http → Login, then paste it below.
 
 @graphqlUrl = http://localhost:4000/query
-@token = <paste-token-here>
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyZDkyNWE4Yy05ODQwLTRhZDktYTAzOC1hOGFjMzYxMGFkY2QiLCJleHAiOjE3ODIxMDkzNjYsImlhdCI6MTc4MjAyMjk2Nn0.iZope0bTpO-e2H6pAvDBmvt00Da-JZPOIWd4sdDrCnA
 
 # ── Queries ──────────────────────────────────────────────────────────────────
 

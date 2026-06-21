@@ -20,7 +20,7 @@ POST {{baseUrl}}/api/users/login HTTP/1.1
 content-type: application/json
 
 {
-  "id": "109f4a42-fb5f-4850-8886-06220b1756fb",
+  "id": "2d925a8c-9840-4ad9-a038-a8ac3610adcd",
   "password": "secret123"
 }
 
