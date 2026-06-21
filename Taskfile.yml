@@ -1,45 +1,114 @@
 version: "3"
 
+vars:
+  GOOSE_FLAGS: GOOSE_DRIVER=postgres GOOSE_DBSTRING="postgres://postgres:postgres@127.0.0.1:5432/db?sslmode=disable"
+
 tasks:
+
+  # ── Run ──────────────────────────────────────────────────────────────────────
+
   run:
-    desc: Run the API locally
+    desc: Run the REST API (Echo) locally
     cmds:
       - go run ./cmd/web
 
+  run:grpc:
+    desc: Run the gRPC server (port 50051)
+    cmds:
+      - go run ./cmd/grpc
+
+  run:graphql:
+    desc: Run the GraphQL server (port 4000, playground at http://localhost:4000/)
+    cmds:
+      - go run ./cmd/graphql
+
+  # ── Build ─────────────────────────────────────────────────────────────────────
+
   build:
-    desc: Build for local OS
+    desc: Build REST API binary → bin/web
     cmds:
       - go build -o bin/web ./cmd/web
 
+  build:grpc:
+    desc: Build gRPC server binary → bin/grpc
+    cmds:
+      - go build -o bin/grpc ./cmd/grpc
+
+  build:graphql:
+    desc: Build GraphQL server binary → bin/graphql
+    cmds:
+      - go build -o bin/graphql ./cmd/graphql
+
+  build:all:
+    desc: Build all three server binaries
+    cmds:
+      - task: build
+      - task: build:grpc
+      - task: build:graphql
+
   build:amazon-linux:
-    desc: Static build for Amazon Linux (linux/amd64)
+    desc: Static build for Amazon Linux (linux/amd64) → bin/web-linux-amd64
     cmds:
       - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o bin/web-linux-amd64 ./cmd/web
+
+  # ── Codegen ───────────────────────────────────────────────────────────────────
+
+  proto:gen:
+    desc: Re-generate gRPC Go code from internal/delivery/grpc/proto/item.proto
+    cmds:
+      - |
+        protoc \
+          --go_out=internal/delivery/grpc/pb \
+          --go_opt=paths=import \
+          --go-grpc_out=internal/delivery/grpc/pb \
+          --go-grpc_opt=paths=import \
+          --proto_path=internal/delivery/grpc/proto \
+          internal/delivery/grpc/proto/item.proto
+      - |
+        find internal/delivery/grpc/pb -name '*.go' \
+          -not -path 'internal/delivery/grpc/pb/*.go' \
+          -exec mv {} internal/delivery/grpc/pb/ \;
+      - find internal/delivery/grpc/pb -mindepth 1 -type d -empty -delete
+
+  graphql:gen:
+    desc: Re-run gqlgen codegen from internal/delivery/graphql/schema/
+    cmds:
+      - GOFLAGS=-mod=mod go run github.com/99designs/gqlgen generate --config internal/delivery/graphql/gqlgen.yml
+
+  # ── Infrastructure ────────────────────────────────────────────────────────────
 
   postgres:docker:
     desc: Start a local PostgreSQL container
     cmds:
-      - docker run --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=db -d postgres:16
+      - docker run --name postgres -p 5432:5432
+          -e POSTGRES_PASSWORD=postgres
+          -e POSTGRES_USER=postgres
+          -e POSTGRES_DB=db
+          -d postgres:16
 
   tools:install:
-    desc: Install goose CLI tool
+    desc: Install CLI tools (goose, protoc-gen-go, protoc-gen-go-grpc)
     cmds:
       - go install github.com/pressly/goose/v3/cmd/goose@latest
+      - go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+      - go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+  # ── Migrations ────────────────────────────────────────────────────────────────
 
   goose:up:
-    desc: Run Goose migrations
+    desc: Apply all pending migrations
     cmds:
-      - GOOSE_DRIVER=postgres GOOSE_DBSTRING="postgres://postgres:postgres@127.0.0.1:5432/db?sslmode=disable" goose -dir ./db/migrations up
+      - "{{.GOOSE_FLAGS}} goose -dir ./db/migrations up"
 
   goose:down:
-    desc: Run Goose migrations down
+    desc: Roll back one migration step
     cmds:
-      - GOOSE_DRIVER=postgres GOOSE_DBSTRING="postgres://postgres:postgres@127.0.0.1:5432/db?sslmode=disable" goose -dir ./db/migrations down
+      - "{{.GOOSE_FLAGS}} goose -dir ./db/migrations down"
 
   goose:create:
-    desc: Create a migration (NAME required)
+    desc: "Create a new migration (usage: task goose:create -- create_table_foo)"
     cmds:
       - goose -dir ./db/migrations create "{{.CLI_ARGS}}" sql
     preconditions:
       - sh: test -n "{{.CLI_ARGS}}"
-        msg: "NAME is required. Example: task goose:create -- create_table_items"
+        msg: "NAME is required. Example: task goose:create -- create_table_foo"
