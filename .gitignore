@@ -1,3 +1,9 @@
 .idea
 .vscode
 .zed
+.claude
+docs
+bin/
+graphql
+grpc
+web
