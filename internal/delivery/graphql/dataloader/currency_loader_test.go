@@ -156,6 +156,63 @@ func TestCurrencyLoader_CorrectValuesReturned(t *testing.T) {
 	assert.Equal(t, currencyservice.Currency{Code: "SGD", Symbol: "S$", DecimalPlaces: 2}, currency)
 }
 
+// TestCurrencyLoader_SecondBatchAfterDispatch verifies that a second wave of
+// Load() calls — arriving after the first dispatch has already fired — still
+// resolves correctly. This would have hung forever with the old sync.Once
+// implementation because the timer was never re-armed.
+func TestCurrencyLoader_SecondBatchAfterDispatch(t *testing.T) {
+	currencyservice.BatchCallCount.Store(0)
+
+	loader := dataloader.NewCurrencyLoader()
+	ctx := context.Background()
+
+	// First batch: load USD, wait for it to resolve.
+	var wg sync.WaitGroup
+	wg.Add(1)
+	var first currencyservice.Currency
+	go func() {
+		defer wg.Done()
+		first, _ = loader.Load(ctx, "USD")
+	}()
+	wg.Wait()
+	assert.Equal(t, "USD", first.Code)
+
+	// Second batch: load SGD after the first dispatch has already fired.
+	wg.Add(1)
+	var second currencyservice.Currency
+	go func() {
+		defer wg.Done()
+		second, _ = loader.Load(ctx, "SGD")
+	}()
+	wg.Wait()
+	assert.Equal(t, "SGD", second.Code)
+
+	assert.Equal(t, int64(2), currencyservice.BatchCallCount.Load(), "each batch wave should produce one GetCurrencies call")
+}
+
+// TestCurrencyLoader_UnknownCodeFallback verifies that a Load() for an
+// unknown currency code still returns a non-nil result (the fake service
+// returns a fallback Currency rather than omitting the key), so no error
+// is expected from the loader layer itself.
+func TestCurrencyLoader_UnknownCodeFallback(t *testing.T) {
+	loader := dataloader.NewCurrencyLoader()
+	ctx := context.Background()
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	var currency currencyservice.Currency
+	var err error
+	go func() {
+		defer wg.Done()
+		currency, err = loader.Load(ctx, "UNKNOWN")
+	}()
+	wg.Wait()
+
+	assert.NoError(t, err)
+	assert.Equal(t, "UNKNOWN", currency.Code)
+	assert.Equal(t, "?", currency.Symbol)
+}
+
 // TestWithLoader_StoresAndRetrievesLoader verifies that WithLoader injects a
 // non-nil CurrencyLoader into the context and LoaderFrom retrieves it.
 func TestWithLoader_StoresAndRetrievesLoader(t *testing.T) {

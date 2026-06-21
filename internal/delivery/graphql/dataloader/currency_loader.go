@@ -2,6 +2,7 @@ package dataloader
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -12,11 +13,11 @@ import (
 // request-tick into a single GetCurrencies call, eliminating the N+1.
 // One instance per incoming GraphQL request — never shared across requests.
 type CurrencyLoader struct {
-	mu      sync.Mutex
-	keys    []string
-	waiters map[string][]chan result // one channel per caller, keyed by code
-	wait    time.Duration
-	once    sync.Once
+	mu       sync.Mutex
+	keys     []string
+	waiters  map[string][]chan result // one channel per caller, keyed by code
+	wait     time.Duration
+	timerSet bool // protected by mu; true while a dispatch timer is pending
 }
 
 type result struct {
@@ -42,21 +43,27 @@ func (l *CurrencyLoader) Load(ctx context.Context, code string) (currencyservice
 		l.keys = append(l.keys, code)
 	}
 	l.waiters[code] = append(l.waiters[code], ch)
-	l.mu.Unlock()
-
-	// Fire the batch after the wait window (once per loader instance).
-	l.once.Do(func() {
+	if !l.timerSet {
+		l.timerSet = true
 		time.AfterFunc(l.wait, func() { l.dispatch(ctx) })
-	})
+	}
+	l.mu.Unlock()
 
 	r := <-ch
 	return r.currency, r.err
 }
 
 func (l *CurrencyLoader) dispatch(ctx context.Context) {
+	// Swap out the current batch under the mutex so that:
+	//   (a) new Load() calls after this point open a fresh batch window, and
+	//   (b) we iterate a map that no other goroutine holds a reference to —
+	//       eliminating the data race.
 	l.mu.Lock()
 	keys := l.keys
 	waiters := l.waiters
+	l.keys = nil
+	l.waiters = make(map[string][]chan result)
+	l.timerSet = false
 	l.mu.Unlock()
 
 	// De-duplicate keys before the batch call.
@@ -76,8 +83,10 @@ func (l *CurrencyLoader) dispatch(ctx context.Context) {
 		for _, ch := range chans {
 			if err != nil {
 				ch <- result{err: err}
+			} else if c, ok := currencies[code]; ok {
+				ch <- result{currency: c}
 			} else {
-				ch <- result{currency: currencies[code]}
+				ch <- result{err: fmt.Errorf("currency not found: %s", code)}
 			}
 		}
 	}
