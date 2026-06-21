@@ -6,6 +6,33 @@ The `Item` domain is the reference implementation. Every step below mirrors what
 
 ---
 
+## Overview
+
+11 steps across two parts, using `Product` as the example domain.
+
+**Part 1 — gRPC (Steps 1–4):** expose the existing usecase over the network as a gRPC service.
+
+| Step | What | File |
+|------|------|------|
+| 1 | Define the proto contract | `internal/delivery/grpc/proto/product.proto` |
+| 2 | Generate Go code | `internal/delivery/grpc/pb/` (via `make proto-gen`) |
+| 3 | Write the gRPC server adapter | `internal/delivery/grpc/product_server.go` |
+| 4 | Register the service in the entrypoint | `cmd/grpc/main.go` |
+
+**Part 2 — GraphQL (Steps 5–11):** expose the gRPC service as GraphQL fields. The GraphQL layer calls gRPC — never the usecase directly.
+
+| Step | What | File |
+|------|------|------|
+| 5 | Add schema types and operations | `internal/delivery/graphql/schema/product.graphqls` |
+| 6 | Add Go model structs | `internal/delivery/graphql/graph/model/models.go` |
+| 7 | Bind models in gqlgen config | `internal/delivery/graphql/gqlgen.yml` |
+| 8 | Re-run codegen | `graph/generated.go` + resolver stubs (via `make graphql-gen`) |
+| 9 | Add the gRPC client field to root Resolver | `internal/delivery/graphql/resolver/resolver.go` |
+| 10 | Implement the resolver stubs | `internal/delivery/graphql/resolver/product.resolvers.go` |
+| 11 | Wire the client in the GraphQL entrypoint | `cmd/graphql/main.go` |
+
+---
+
 ## Prerequisites
 
 - Usecase exists at `internal/usecase/product_usecase.go` with a concrete struct, e.g. `ProductUseCase`
