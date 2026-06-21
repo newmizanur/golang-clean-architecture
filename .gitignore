@@ -7,3 +7,4 @@ bin/
 /graphql
 /grpc
 /web
+.DS_Store
