@@ -21,7 +21,7 @@ func main() {
 	viperConfig := config.NewViper()
 	log := config.NewLogger(viperConfig)
 
-	grpcAddr := fmt.Sprintf("localhost:%d", viperConfig.GetInt("grpc.port"))
+	grpcAddr := fmt.Sprintf("%s:%d", viperConfig.GetString("grpc.host"), viperConfig.GetInt("grpc.port"))
 	conn, err := grpc.NewClient(grpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("failed to connect to gRPC server: %v", err)
@@ -56,9 +56,11 @@ func main() {
 	mux.Handle("/", playground.Handler("GraphQL Playground", "/query"))
 	mux.Handle("/query", jwtMiddleware(loaderMiddleware(srv)))
 
+	graphqlHost := viperConfig.GetString("graphql.host")
 	port := viperConfig.GetInt("graphql.port")
-	log.Infof("GraphQL server listening on :%d (playground at http://localhost:%d/)", port, port)
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), mux); err != nil {
+	addr := fmt.Sprintf("%s:%d", graphqlHost, port)
+	log.Infof("GraphQL server listening on %s (playground at http://localhost:%d/)", addr, port)
+	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Fatalf("GraphQL server failed: %v", err)
 	}
 }

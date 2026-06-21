@@ -31,13 +31,15 @@ func main() {
 
 	pb.RegisterItemServiceServer(grpcServer, grpcdelivery.NewItemGRPCServer(itemUseCase))
 
+	host := viperConfig.GetString("grpc.host")
 	port := viperConfig.GetInt("grpc.port")
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	addr := fmt.Sprintf("%s:%d", host, port)
+	lis, err := net.Listen("tcp", addr)
 	if err != nil {
-		log.Fatalf("failed to listen on port %d: %v", port, err)
+		log.Fatalf("failed to listen on %s: %v", addr, err)
 	}
 
-	log.Infof("gRPC server listening on :%d", port)
+	log.Infof("gRPC server listening on %s", addr)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("gRPC server failed: %v", err)
 	}

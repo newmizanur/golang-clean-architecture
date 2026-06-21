@@ -4,6 +4,6 @@
 .claude
 docs
 bin/
-graphql
-grpc
-web
+/graphql
+/grpc
+/web
