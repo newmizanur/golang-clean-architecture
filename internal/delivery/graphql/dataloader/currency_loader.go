@@ -14,7 +14,7 @@ import (
 type CurrencyLoader struct {
 	mu      sync.Mutex
 	keys    []string
-	results map[string]chan result
+	waiters map[string][]chan result // one channel per caller, keyed by code
 	wait    time.Duration
 	once    sync.Once
 }
@@ -26,19 +26,22 @@ type result struct {
 
 func NewCurrencyLoader() *CurrencyLoader {
 	return &CurrencyLoader{
-		results: make(map[string]chan result),
+		waiters: make(map[string][]chan result),
 		wait:    2 * time.Millisecond,
 	}
 }
 
 // Load queues a currency code for batching and blocks until the batch fires.
+// Multiple concurrent callers for the same code each get their own channel so
+// dispatch can fan-out the single result to all of them.
 func (l *CurrencyLoader) Load(ctx context.Context, code string) (currencyservice.Currency, error) {
+	ch := make(chan result, 1)
+
 	l.mu.Lock()
-	if _, exists := l.results[code]; !exists {
+	if len(l.waiters[code]) == 0 {
 		l.keys = append(l.keys, code)
-		l.results[code] = make(chan result, 1)
 	}
-	ch := l.results[code]
+	l.waiters[code] = append(l.waiters[code], ch)
 	l.mu.Unlock()
 
 	// Fire the batch after the wait window (once per loader instance).
@@ -53,7 +56,7 @@ func (l *CurrencyLoader) Load(ctx context.Context, code string) (currencyservice
 func (l *CurrencyLoader) dispatch(ctx context.Context) {
 	l.mu.Lock()
 	keys := l.keys
-	results := l.results
+	waiters := l.waiters
 	l.mu.Unlock()
 
 	// De-duplicate keys before the batch call.
@@ -68,11 +71,14 @@ func (l *CurrencyLoader) dispatch(ctx context.Context) {
 
 	currencies, err := currencyservice.GetCurrencies(ctx, unique)
 
-	for code, ch := range results {
-		if err != nil {
-			ch <- result{err: err}
-		} else {
-			ch <- result{currency: currencies[code]}
+	// Fan-out: send the result to every caller waiting on each code.
+	for code, chans := range waiters {
+		for _, ch := range chans {
+			if err != nil {
+				ch <- result{err: err}
+			} else {
+				ch <- result{currency: currencies[code]}
+			}
 		}
 	}
 }

@@ -52,20 +52,56 @@ func TestCurrencyLoader_BatchesMultipleCalls(t *testing.T) {
 	}
 }
 
-// TestCurrencyLoader_DeduplicatesCodes verifies that even when the same code
-// appears multiple times in the key list, GetCurrencies is called only once and
-// with deduplicated keys. This is tested by loading several codes (including a
-// duplicate registration path) in a single batch and asserting BatchCallCount==1.
+// TestCurrencyLoader_DeduplicatesCodes verifies that 10 concurrent Load() calls
+// for the same code "USD" are all batched into a single GetCurrencies call and
+// every caller receives the correct result.
 func TestCurrencyLoader_DeduplicatesCodes(t *testing.T) {
 	currencyservice.BatchCallCount.Store(0)
 
 	loader := dataloader.NewCurrencyLoader()
 	ctx := context.Background()
 
-	// Each distinct code gets exactly one goroutine to avoid channel contention.
-	// The deduplication under test is at the GetCurrencies level (dispatch
-	// de-duplicates l.keys before calling GetCurrencies).
-	codes := []string{"USD", "SGD", "BDT", "JPY"}
+	const n = 10
+	results := make([]currencyservice.Currency, n)
+	errs := make([]error, n)
+
+	var ready sync.WaitGroup
+	start := make(chan struct{})
+	var done sync.WaitGroup
+
+	for i := 0; i < n; i++ {
+		ready.Add(1)
+		done.Add(1)
+		go func(idx int) {
+			defer done.Done()
+			ready.Done()
+			<-start
+			results[idx], errs[idx] = loader.Load(ctx, "USD")
+		}(i)
+	}
+	ready.Wait()
+	close(start)
+	done.Wait()
+
+	assert.Equal(t, int64(1), currencyservice.BatchCallCount.Load(), "all 10 loads should be batched into one GetCurrencies call")
+	for i := 0; i < n; i++ {
+		assert.NoError(t, errs[i])
+		assert.Equal(t, "USD", results[i].Code)
+		assert.Equal(t, "$", results[i].Symbol)
+	}
+}
+
+// TestCurrencyLoader_MixedDuplicates verifies that concurrent Load() calls for
+// a mix of codes with duplicates are batched into a single GetCurrencies call
+// with deduplicated keys, and every caller receives the correct result.
+func TestCurrencyLoader_MixedDuplicates(t *testing.T) {
+	currencyservice.BatchCallCount.Store(0)
+
+	loader := dataloader.NewCurrencyLoader()
+	ctx := context.Background()
+
+	// 6 loads: 3 unique codes, 2 callers each.
+	codes := []string{"USD", "USD", "SGD", "SGD", "JPY", "JPY"}
 	results := make([]currencyservice.Currency, len(codes))
 	errs := make([]error, len(codes))
 
@@ -87,13 +123,16 @@ func TestCurrencyLoader_DeduplicatesCodes(t *testing.T) {
 	close(start)
 	done.Wait()
 
-	assert.Equal(t, int64(1), currencyservice.BatchCallCount.Load(), "all loads should be batched into one GetCurrencies call")
-	for i := 0; i < len(codes); i++ {
+	assert.Equal(t, int64(1), currencyservice.BatchCallCount.Load(), "all 6 loads should be batched into one GetCurrencies call")
+	for i, code := range codes {
 		assert.NoError(t, errs[i])
-		assert.Equal(t, codes[i], results[i].Code)
+		assert.Equal(t, code, results[i].Code)
 	}
-	// Confirm the USD result has the correct symbol (deduplication did not lose data).
+	// Spot-check symbols.
 	assert.Equal(t, "$", results[0].Symbol)
+	assert.Equal(t, "$", results[1].Symbol)
+	assert.Equal(t, "S$", results[2].Symbol)
+	assert.Equal(t, "S$", results[3].Symbol)
 }
 
 // TestCurrencyLoader_CorrectValuesReturned verifies the exact field values for a
