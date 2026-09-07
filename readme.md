@@ -139,6 +139,22 @@ task proto:gen
 make proto-gen
 ```
 
+## Adding a new gRPC domain/feature
+
+Full walkthrough: [`adding-a-new-domain.md`](adding-a-new-domain.md). Short version, using `Product` as the example (assumes `internal/usecase/product_usecase.go` and `internal/repository/product_repository.go` already exist):
+
+1. **Write the proto contract** at `internal/delivery/grpc/proto/product.proto` — define the service, request/response messages (see `item.proto` next to it for the pattern).
+2. **Generate Go code**:
+   ```sh
+   task proto:gen
+   # or
+   make proto-gen
+   ```
+   This produces `internal/delivery/grpc/pb/product.pb.go` and `product_grpc.pb.go`.
+3. **Write the gRPC server adapter** at `internal/delivery/grpc/product_server.go` — a thin struct implementing the generated `pb.UnimplementedProductServiceServer`, mapping pb request → dto → usecase → pb response (mirror `item_server.go`).
+4. **Register the new service** in `cmd/grpc/main.go`: construct the repository/usecase, then `pb.RegisterProductServiceServer(grpcServer, grpcdelivery.NewProductGRPCServer(productUseCase))` alongside the existing `Item` registration.
+5. **Verify**: `go build ./cmd/grpc/...` and add unit tests under `internal/delivery/grpc/product_server_test.go` (see `item_server_test.go` for the pattern) — run with `task test:grpc` / `make test-grpc`.
+
 ## Verifying the gRPC server (grpcurl)
 
 Install grpcurl: `brew install grpcurl`
