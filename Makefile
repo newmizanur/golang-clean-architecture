@@ -1,6 +1,8 @@
 GOOSE_FLAGS = GOOSE_DRIVER=postgres GOOSE_DBSTRING="postgres://postgres:postgres@127.0.0.1:5432/db?sslmode=disable"
 
-.PHONY: run build build-amazon-linux postgres-docker tools-install goose-up goose-down goose-create
+.PHONY: run build build-amazon-linux \
+        test test-unit test-cov \
+        postgres-docker tools-install goose-up goose-down goose-create
 
 ## Run the API locally
 run:
@@ -13,6 +15,21 @@ build:
 ## Static build for Amazon Linux (linux/amd64)
 build-amazon-linux:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o bin/web-linux-amd64 ./cmd/web
+
+# ── Test ───────────────────────────────────────────────────────────────────────
+
+## Run all tests: unit + integration (integration needs Postgres — see postgres-docker/goose-up)
+test:
+	go test -tags=integration ./internal/... -v
+
+## Run unit tests only (mocked dependencies, no external services required)
+test-unit:
+	go test ./internal/... -v
+
+## Run unit tests and display a per-function coverage report
+test-cov:
+	go test ./internal/... -coverprofile=coverage.out
+	go tool cover -func=coverage.out
 
 ## Start a local PostgreSQL container
 postgres-docker:
