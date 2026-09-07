@@ -8,12 +8,12 @@ import (
 	"golang-clean-architecture/internal/delivery/http/response"
 	"golang-clean-architecture/internal/dto"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 func NewAuth(jwtSecret string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(ctx echo.Context) error {
+		return func(ctx *echo.Context) error {
 			header := ctx.Request().Header.Get("Authorization")
 			if header == "" {
 				return response.NewErrorBuilder(apperror.AuthErrors.MissingToken).Send(ctx)
@@ -37,7 +37,7 @@ func NewAuth(jwtSecret string) echo.MiddlewareFunc {
 
 // GetUser returns the authenticated user from context.
 // The second return is false if the auth middleware did not set the user (e.g. route not protected).
-func GetUser(ctx echo.Context) (*dto.Auth, bool) {
+func GetUser(ctx *echo.Context) (*dto.Auth, bool) {
 	v := ctx.Get("auth")
 	if v == nil {
 		return nil, false

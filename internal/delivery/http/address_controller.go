@@ -7,7 +7,7 @@ import (
 	"golang-clean-architecture/internal/dto"
 	"golang-clean-architecture/internal/usecase"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/sirupsen/logrus"
 )
 
@@ -23,7 +23,7 @@ func NewAddressController(useCase *usecase.AddressUseCase, log *logrus.Logger) *
 	}
 }
 
-func (c *AddressController) Create(ctx echo.Context) error {
+func (c *AddressController) Create(ctx *echo.Context) error {
 	auth, ok := middleware.GetUser(ctx)
 	if !ok {
 		return httpresponse.NewErrorBuilder(apperror.AuthErrors.Unauthorized).Send(ctx)
@@ -47,7 +47,7 @@ func (c *AddressController) Create(ctx echo.Context) error {
 	return httpresponse.SuccessBuilder(response).Send(ctx)
 }
 
-func (c *AddressController) List(ctx echo.Context) error {
+func (c *AddressController) List(ctx *echo.Context) error {
 	auth, ok := middleware.GetUser(ctx)
 	if !ok {
 		return httpresponse.NewErrorBuilder(apperror.AuthErrors.Unauthorized).Send(ctx)
@@ -68,7 +68,7 @@ func (c *AddressController) List(ctx echo.Context) error {
 	return httpresponse.SuccessBuilder(responses).Send(ctx)
 }
 
-func (c *AddressController) Get(ctx echo.Context) error {
+func (c *AddressController) Get(ctx *echo.Context) error {
 	auth, ok := middleware.GetUser(ctx)
 	if !ok {
 		return httpresponse.NewErrorBuilder(apperror.AuthErrors.Unauthorized).Send(ctx)
@@ -91,7 +91,7 @@ func (c *AddressController) Get(ctx echo.Context) error {
 	return httpresponse.SuccessBuilder(response).Send(ctx)
 }
 
-func (c *AddressController) Update(ctx echo.Context) error {
+func (c *AddressController) Update(ctx *echo.Context) error {
 	auth, ok := middleware.GetUser(ctx)
 	if !ok {
 		return httpresponse.NewErrorBuilder(apperror.AuthErrors.Unauthorized).Send(ctx)
@@ -116,7 +116,7 @@ func (c *AddressController) Update(ctx echo.Context) error {
 	return httpresponse.SuccessBuilder(response).Send(ctx)
 }
 
-func (c *AddressController) Delete(ctx echo.Context) error {
+func (c *AddressController) Delete(ctx *echo.Context) error {
 	auth, ok := middleware.GetUser(ctx)
 	if !ok {
 		return httpresponse.NewErrorBuilder(apperror.AuthErrors.Unauthorized).Send(ctx)

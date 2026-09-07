@@ -8,7 +8,7 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/sirupsen/logrus"
 )
 
@@ -33,7 +33,7 @@ func NewItemController(useCase ItemUseCasePort, log *logrus.Logger) *ItemControl
 	}
 }
 
-func (c *ItemController) Create(ctx echo.Context) error {
+func (c *ItemController) Create(ctx *echo.Context) error {
 	request := new(dto.CreateItemRequest)
 	if err := ctx.Bind(&request); err != nil {
 		c.Log.WithError(err).Error("error parsing request body")
@@ -49,7 +49,7 @@ func (c *ItemController) Create(ctx echo.Context) error {
 	return httpresponse.SuccessBuilder(response).Send(ctx)
 }
 
-func (c *ItemController) List(ctx echo.Context) error {
+func (c *ItemController) List(ctx *echo.Context) error {
 	request := &dto.SearchItemRequest{
 		Name: ctx.QueryParam("name"),
 		SKU:  ctx.QueryParam("sku"),
@@ -74,7 +74,7 @@ func (c *ItemController) List(ctx echo.Context) error {
 	return httpresponse.SuccessBuilder(response).WithPaging(paging).Send(ctx)
 }
 
-func (c *ItemController) Get(ctx echo.Context) error {
+func (c *ItemController) Get(ctx *echo.Context) error {
 	itemID, err := itemIDParam(ctx)
 	if err != nil {
 		return httpresponse.NewErrorBuilder(apperror.ItemErrors.InvalidRequest).Send(ctx)
@@ -90,7 +90,7 @@ func (c *ItemController) Get(ctx echo.Context) error {
 	return httpresponse.SuccessBuilder(response).Send(ctx)
 }
 
-func (c *ItemController) Update(ctx echo.Context) error {
+func (c *ItemController) Update(ctx *echo.Context) error {
 	itemID, err := itemIDParam(ctx)
 	if err != nil {
 		return httpresponse.NewErrorBuilder(apperror.ItemErrors.InvalidRequest).Send(ctx)
@@ -112,7 +112,7 @@ func (c *ItemController) Update(ctx echo.Context) error {
 	return httpresponse.SuccessBuilder(response).Send(ctx)
 }
 
-func (c *ItemController) Delete(ctx echo.Context) error {
+func (c *ItemController) Delete(ctx *echo.Context) error {
 	itemID, err := itemIDParam(ctx)
 	if err != nil {
 		return httpresponse.NewErrorBuilder(apperror.ItemErrors.InvalidRequest).Send(ctx)
@@ -127,6 +127,6 @@ func (c *ItemController) Delete(ctx echo.Context) error {
 	return httpresponse.SuccessBuilder(true).Send(ctx)
 }
 
-func itemIDParam(ctx echo.Context) (int64, error) {
+func itemIDParam(ctx *echo.Context) (int64, error) {
 	return strconv.ParseInt(ctx.Param("itemId"), 10, 64)
 }

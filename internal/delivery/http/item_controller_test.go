@@ -10,7 +10,7 @@ import (
 	"golang-clean-architecture/internal/apperror"
 	"golang-clean-architecture/internal/dto"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -46,7 +46,7 @@ func newTestController(mock *mockItemUseCase) *ItemController {
 	return NewItemController(mock, log)
 }
 
-func setupEcho(method, path, body string) (echo.Context, *httptest.ResponseRecorder) {
+func setupEcho(method, path, body string) (*echo.Context, *httptest.ResponseRecorder) {
 	e := echo.New()
 	req := httptest.NewRequest(method, path, strings.NewReader(body))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -136,8 +136,7 @@ func TestItemController_Get_Success(t *testing.T) {
 	ctrl := newTestController(mock)
 
 	c, rec := setupEcho("GET", "/api/items/1", "")
-	c.SetParamNames("itemId")
-	c.SetParamValues("1")
+	c.SetPathValues(echo.PathValues{{Name: "itemId", Value: "1"}})
 	err := ctrl.Get(c)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -153,8 +152,7 @@ func TestItemController_Get_NotFound(t *testing.T) {
 	ctrl := newTestController(mock)
 
 	c, rec := setupEcho("GET", "/api/items/1", "")
-	c.SetParamNames("itemId")
-	c.SetParamValues("1")
+	c.SetPathValues(echo.PathValues{{Name: "itemId", Value: "1"}})
 	err := ctrl.Get(c)
 	assert.NoError(t, err)
 	assert.Equal(t, 404, rec.Code)
@@ -164,8 +162,7 @@ func TestItemController_Get_InvalidID(t *testing.T) {
 	ctrl := newTestController(&mockItemUseCase{})
 
 	c, rec := setupEcho("GET", "/api/items/abc", "")
-	c.SetParamNames("itemId")
-	c.SetParamValues("abc")
+	c.SetPathValues(echo.PathValues{{Name: "itemId", Value: "abc"}})
 	err := ctrl.Get(c)
 	assert.NoError(t, err)
 	assert.Equal(t, 400, rec.Code)
@@ -182,8 +179,7 @@ func TestItemController_Update_Success(t *testing.T) {
 	ctrl := newTestController(mock)
 
 	c, rec := setupEcho("PUT", "/api/items/1", `{"name":"Updated"}`)
-	c.SetParamNames("itemId")
-	c.SetParamValues("1")
+	c.SetPathValues(echo.PathValues{{Name: "itemId", Value: "1"}})
 	err := ctrl.Update(c)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -199,8 +195,7 @@ func TestItemController_Update_NotFound(t *testing.T) {
 	ctrl := newTestController(mock)
 
 	c, rec := setupEcho("PUT", "/api/items/1", `{"name":"Updated"}`)
-	c.SetParamNames("itemId")
-	c.SetParamValues("1")
+	c.SetPathValues(echo.PathValues{{Name: "itemId", Value: "1"}})
 	err := ctrl.Update(c)
 	assert.NoError(t, err)
 	assert.Equal(t, 404, rec.Code)
@@ -217,8 +212,7 @@ func TestItemController_Delete_Success(t *testing.T) {
 	ctrl := newTestController(mock)
 
 	c, rec := setupEcho("DELETE", "/api/items/1", "")
-	c.SetParamNames("itemId")
-	c.SetParamValues("1")
+	c.SetPathValues(echo.PathValues{{Name: "itemId", Value: "1"}})
 	err := ctrl.Delete(c)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -233,8 +227,7 @@ func TestItemController_Delete_NotFound(t *testing.T) {
 	ctrl := newTestController(mock)
 
 	c, rec := setupEcho("DELETE", "/api/items/1", "")
-	c.SetParamNames("itemId")
-	c.SetParamValues("1")
+	c.SetPathValues(echo.PathValues{{Name: "itemId", Value: "1"}})
 	err := ctrl.Delete(c)
 	assert.NoError(t, err)
 	assert.Equal(t, 404, rec.Code)

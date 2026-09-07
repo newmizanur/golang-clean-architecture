@@ -8,7 +8,7 @@ import (
 	"golang-clean-architecture/internal/usecase"
 	"math"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/sirupsen/logrus"
 )
 
@@ -24,7 +24,7 @@ func NewContactController(useCase *usecase.ContactUseCase, log *logrus.Logger) *
 	}
 }
 
-func (c *ContactController) Create(ctx echo.Context) error {
+func (c *ContactController) Create(ctx *echo.Context) error {
 	auth, ok := middleware.GetUser(ctx)
 	if !ok {
 		return httpresponse.NewErrorBuilder(apperror.AuthErrors.Unauthorized).Send(ctx)
@@ -46,7 +46,7 @@ func (c *ContactController) Create(ctx echo.Context) error {
 	return httpresponse.SuccessBuilder(response).Send(ctx)
 }
 
-func (c *ContactController) List(ctx echo.Context) error {
+func (c *ContactController) List(ctx *echo.Context) error {
 	auth, ok := middleware.GetUser(ctx)
 	if !ok {
 		return httpresponse.NewErrorBuilder(apperror.AuthErrors.Unauthorized).Send(ctx)
@@ -77,7 +77,7 @@ func (c *ContactController) List(ctx echo.Context) error {
 	return httpresponse.SuccessBuilder(responses).WithPaging(paging).Send(ctx)
 }
 
-func (c *ContactController) Get(ctx echo.Context) error {
+func (c *ContactController) Get(ctx *echo.Context) error {
 	auth, ok := middleware.GetUser(ctx)
 	if !ok {
 		return httpresponse.NewErrorBuilder(apperror.AuthErrors.Unauthorized).Send(ctx)
@@ -97,7 +97,7 @@ func (c *ContactController) Get(ctx echo.Context) error {
 	return httpresponse.SuccessBuilder(response).Send(ctx)
 }
 
-func (c *ContactController) Update(ctx echo.Context) error {
+func (c *ContactController) Update(ctx *echo.Context) error {
 	auth, ok := middleware.GetUser(ctx)
 	if !ok {
 		return httpresponse.NewErrorBuilder(apperror.AuthErrors.Unauthorized).Send(ctx)
@@ -121,7 +121,7 @@ func (c *ContactController) Update(ctx echo.Context) error {
 	return httpresponse.SuccessBuilder(response).Send(ctx)
 }
 
-func (c *ContactController) Delete(ctx echo.Context) error {
+func (c *ContactController) Delete(ctx *echo.Context) error {
 	auth, ok := middleware.GetUser(ctx)
 	if !ok {
 		return httpresponse.NewErrorBuilder(apperror.AuthErrors.Unauthorized).Send(ctx)
