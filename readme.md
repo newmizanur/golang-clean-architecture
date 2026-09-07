@@ -89,6 +89,31 @@ make run-grpc
 go run ./cmd/grpc
 ```
 
+## Testing
+
+Run unit tests only (mocked dependencies, no Postgres required):
+```sh
+task test:unit
+# or
+make test-unit
+```
+
+Run unit tests with a per-function coverage report:
+```sh
+task test:cov
+# or
+make test-cov
+```
+
+Run everything, including integration tests that hit a real Postgres (needs `postgres-docker` + `goose-up` first):
+```sh
+task test
+# or
+make test
+```
+
+Domain-specific test targets are still available: `test:grpc`/`test-grpc` and `test:http`/`test-http`.
+
 ## Building
 
 ```sh

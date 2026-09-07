@@ -43,9 +43,20 @@ tasks:
   # ── Test ──────────────────────────────────────────────────────────────────────
 
   test:
-    desc: Run all unit tests
+    desc: Run all tests - unit + integration (integration needs Postgres, see postgres:docker/goose:up)
+    cmds:
+      - go test -tags=integration ./internal/... -v
+
+  test:unit:
+    desc: Run unit tests only (mocked dependencies, no external services required)
     cmds:
       - go test ./internal/... -v
+
+  test:cov:
+    desc: Run unit tests and display a per-function coverage report
+    cmds:
+      - go test ./internal/... -coverprofile=coverage.out
+      - go tool cover -func=coverage.out
 
   test:grpc:
     desc: Run gRPC server unit tests only

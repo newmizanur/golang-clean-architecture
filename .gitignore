@@ -7,3 +7,4 @@ bin/
 /grpc
 /web
 .DS_Store
+coverage.out
