@@ -4,7 +4,6 @@
 .claude
 docs/
 bin/
-/graphql
 /grpc
 /web
 .DS_Store

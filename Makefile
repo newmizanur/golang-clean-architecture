@@ -1,9 +1,9 @@
 GOOSE_FLAGS = GOOSE_DRIVER=postgres GOOSE_DBSTRING="postgres://postgres:postgres@127.0.0.1:5432/db?sslmode=disable"
 
-.PHONY: run run-grpc run-graphql \
-        build build-grpc build-graphql build-all build-amazon-linux \
-        proto-gen graphql-gen \
-        test test-grpc test-http test-graphql test-dataloader \
+.PHONY: run run-grpc \
+        build build-grpc build-all build-amazon-linux \
+        proto-gen \
+        test test-grpc test-http \
         postgres-docker tools-install \
         goose-up goose-down goose-create
 
@@ -17,10 +17,6 @@ run:
 run-grpc:
 	go run ./cmd/grpc
 
-## Run the GraphQL server (playground at http://localhost:4000/)
-run-graphql:
-	go run ./cmd/graphql
-
 # ── Build ──────────────────────────────────────────────────────────────────────
 
 ## Build REST API binary → bin/web
@@ -31,12 +27,8 @@ build:
 build-grpc:
 	go build -o bin/grpc ./cmd/grpc
 
-## Build GraphQL server binary → bin/graphql
-build-graphql:
-	go build -o bin/graphql ./cmd/graphql
-
-## Build all three binaries
-build-all: build build-grpc build-graphql
+## Build both binaries
+build-all: build build-grpc
 
 ## Static build for Amazon Linux (linux/amd64) → bin/web-linux-amd64
 build-amazon-linux:
@@ -56,14 +48,6 @@ test-grpc:
 test-http:
 	go test ./internal/delivery/http/... -v
 
-## Run GraphQL resolver unit tests only
-test-graphql:
-	go test ./internal/delivery/graphql/resolver/... -v
-
-## Run DataLoader unit tests only
-test-dataloader:
-	go test ./internal/delivery/graphql/dataloader/... -v
-
 # ── Codegen ────────────────────────────────────────────────────────────────────
 
 ## Re-generate gRPC Go code from internal/delivery/grpc/proto/item.proto
@@ -79,11 +63,6 @@ proto-gen:
 	@find internal/delivery/grpc/pb -name '*.go' -not -path 'internal/delivery/grpc/pb/*.go' \
 		-exec mv {} internal/delivery/grpc/pb/ \;
 	@find internal/delivery/grpc/pb -mindepth 1 -type d -empty -delete
-
-## Re-run gqlgen codegen from internal/delivery/graphql/schema/
-graphql-gen:
-	GOFLAGS=-mod=mod go run github.com/99designs/gqlgen generate \
-		--config internal/delivery/graphql/gqlgen.yml
 
 # ── Infrastructure ─────────────────────────────────────────────────────────────
 

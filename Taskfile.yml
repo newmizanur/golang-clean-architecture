@@ -17,11 +17,6 @@ tasks:
     cmds:
       - go run ./cmd/grpc
 
-  run:graphql:
-    desc: Run the GraphQL server (port 4000, playground at http://localhost:4000/)
-    cmds:
-      - go run ./cmd/graphql
-
   # ── Build ─────────────────────────────────────────────────────────────────────
 
   build:
@@ -34,17 +29,11 @@ tasks:
     cmds:
       - go build -o bin/grpc ./cmd/grpc
 
-  build:graphql:
-    desc: Build GraphQL server binary → bin/graphql
-    cmds:
-      - go build -o bin/graphql ./cmd/graphql
-
   build:all:
-    desc: Build all three server binaries
+    desc: Build both server binaries
     cmds:
       - task: build
       - task: build:grpc
-      - task: build:graphql
 
   build:amazon-linux:
     desc: Static build for Amazon Linux (linux/amd64) → bin/web-linux-amd64
@@ -68,16 +57,6 @@ tasks:
     cmds:
       - go test ./internal/delivery/http/... -v
 
-  test:graphql:
-    desc: Run GraphQL resolver unit tests only
-    cmds:
-      - go test ./internal/delivery/graphql/resolver/... -v
-
-  test:dataloader:
-    desc: Run DataLoader unit tests only
-    cmds:
-      - go test ./internal/delivery/graphql/dataloader/... -v
-
   # ── Codegen ───────────────────────────────────────────────────────────────────
 
   proto:gen:
@@ -96,11 +75,6 @@ tasks:
           -not -path 'internal/delivery/grpc/pb/*.go' \
           -exec mv {} internal/delivery/grpc/pb/ \;
       - find internal/delivery/grpc/pb -mindepth 1 -type d -empty -delete
-
-  graphql:gen:
-    desc: Re-run gqlgen codegen from internal/delivery/graphql/schema/
-    cmds:
-      - GOFLAGS=-mod=mod go run github.com/99designs/gqlgen generate --config internal/delivery/graphql/gqlgen.yml
 
   # ── Infrastructure ────────────────────────────────────────────────────────────
 

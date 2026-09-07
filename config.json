@@ -23,9 +23,5 @@
   "grpc": {
     "host": "localhost",
     "port": 50051
-  },
-  "graphql": {
-    "host": "0.0.0.0",
-    "port": 4000
   }
 }
