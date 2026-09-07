@@ -108,6 +108,31 @@ go run ./cmd/graphql
 
 GraphQL playground is available at http://localhost:4000/ when the server is running.
 
+## Testing
+
+Run unit tests only (mocked dependencies, no Postgres required):
+```sh
+task test:unit
+# or
+make test-unit
+```
+
+Run unit tests with a per-function coverage report:
+```sh
+task test:cov
+# or
+make test-cov
+```
+
+Run everything, including integration tests that hit a real Postgres (needs `postgres-docker` + `goose-up` first):
+```sh
+task test
+# or
+make test
+```
+
+Domain-specific test targets are still available: `test:grpc`/`test-grpc`, `test:http`/`test-http`, `test:graphql`/`test-graphql`, `test:dataloader`/`test-dataloader`.
+
 ## Building
 
 ```sh

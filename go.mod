@@ -4,6 +4,7 @@ go 1.27
 
 require (
 	github.com/99designs/gqlgen v0.17.91
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0

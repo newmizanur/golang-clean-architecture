@@ -3,7 +3,7 @@ GOOSE_FLAGS = GOOSE_DRIVER=postgres GOOSE_DBSTRING="postgres://postgres:postgres
 .PHONY: run run-grpc run-graphql \
         build build-grpc build-graphql build-all build-amazon-linux \
         proto-gen graphql-gen \
-        test test-grpc test-http test-graphql test-dataloader \
+        test test-unit test-cov test-grpc test-http test-graphql test-dataloader \
         postgres-docker tools-install \
         goose-up goose-down goose-create
 
@@ -44,9 +44,18 @@ build-amazon-linux:
 
 # ── Test ───────────────────────────────────────────────────────────────────────
 
-## Run all unit tests
+## Run all tests: unit + integration (integration needs Postgres — see postgres-docker/goose-up)
 test:
+	go test -tags=integration ./internal/... -v
+
+## Run unit tests only (mocked dependencies, no external services required)
+test-unit:
 	go test ./internal/... -v
+
+## Run unit tests and display a per-function coverage report
+test-cov:
+	go test ./internal/... -coverprofile=coverage.out
+	go tool cover -func=coverage.out
 
 ## Run gRPC server unit tests only
 test-grpc:
