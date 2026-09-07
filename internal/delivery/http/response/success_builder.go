@@ -5,7 +5,7 @@ import (
 
 	"golang-clean-architecture/internal/dto"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type SuccessResponse[T any] struct {
@@ -22,6 +22,6 @@ func (r *SuccessResponse[T]) WithPaging(paging *dto.PageMetadata) *SuccessRespon
 	return r
 }
 
-func (r *SuccessResponse[T]) Send(ctx echo.Context) error {
+func (r *SuccessResponse[T]) Send(ctx *echo.Context) error {
 	return ctx.JSON(http.StatusOK, dto.WebResponse[T]{Data: r.Data, Paging: r.Paging})
 }

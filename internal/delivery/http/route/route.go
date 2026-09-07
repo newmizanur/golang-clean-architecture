@@ -3,7 +3,7 @@ package route
 import (
 	"golang-clean-architecture/internal/delivery/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type RouteConfig struct {
@@ -22,7 +22,7 @@ func (c *RouteConfig) Setup() {
 
 func (c *RouteConfig) SetupGuestRoute() {
 	// Health check endpoint for load balancers/k8s
-	c.App.GET("/health", func(ctx echo.Context) error {
+	c.App.GET("/health", func(ctx *echo.Context) error {
 		return ctx.JSON(200, map[string]string{"status": "ok"})
 	})
 

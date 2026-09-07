@@ -7,7 +7,7 @@ import (
 	"golang-clean-architecture/internal/dto"
 	"golang-clean-architecture/internal/usecase"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/sirupsen/logrus"
 )
 
@@ -23,7 +23,7 @@ func NewUserController(useCase *usecase.UserUseCase, logger *logrus.Logger) *Use
 	}
 }
 
-func (c *UserController) Register(ctx echo.Context) error {
+func (c *UserController) Register(ctx *echo.Context) error {
 	request := new(dto.RegisterUserRequest)
 	if err := ctx.Bind(request); err != nil {
 		c.Log.Warnf("Failed to parse request body : %+v", err)
@@ -39,7 +39,7 @@ func (c *UserController) Register(ctx echo.Context) error {
 	return httpresponse.SuccessBuilder(response).Send(ctx)
 }
 
-func (c *UserController) Login(ctx echo.Context) error {
+func (c *UserController) Login(ctx *echo.Context) error {
 	request := new(dto.LoginUserRequest)
 	if err := ctx.Bind(request); err != nil {
 		c.Log.Warnf("Failed to parse request body : %+v", err)
@@ -55,7 +55,7 @@ func (c *UserController) Login(ctx echo.Context) error {
 	return httpresponse.SuccessBuilder(response).Send(ctx)
 }
 
-func (c *UserController) Current(ctx echo.Context) error {
+func (c *UserController) Current(ctx *echo.Context) error {
 	auth, ok := middleware.GetUser(ctx)
 	if !ok {
 		return httpresponse.NewErrorBuilder(apperror.AuthErrors.Unauthorized).Send(ctx)
@@ -74,7 +74,7 @@ func (c *UserController) Current(ctx echo.Context) error {
 	return httpresponse.SuccessBuilder(response).Send(ctx)
 }
 
-func (c *UserController) Logout(ctx echo.Context) error {
+func (c *UserController) Logout(ctx *echo.Context) error {
 	auth, ok := middleware.GetUser(ctx)
 	if !ok {
 		return httpresponse.NewErrorBuilder(apperror.AuthErrors.Unauthorized).Send(ctx)
@@ -93,7 +93,7 @@ func (c *UserController) Logout(ctx echo.Context) error {
 	return httpresponse.SuccessBuilder(response).Send(ctx)
 }
 
-func (c *UserController) Update(ctx echo.Context) error {
+func (c *UserController) Update(ctx *echo.Context) error {
 	auth, ok := middleware.GetUser(ctx)
 	if !ok {
 		return httpresponse.NewErrorBuilder(apperror.AuthErrors.Unauthorized).Send(ctx)

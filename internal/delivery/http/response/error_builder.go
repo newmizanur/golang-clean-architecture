@@ -6,7 +6,7 @@ import (
 
 	"golang-clean-architecture/internal/apperror"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type FailedResponse struct {
@@ -22,7 +22,7 @@ func NewErrorBuilder(err error) *ErrorBuilder {
 	return &ErrorBuilder{err: err}
 }
 
-func (b *ErrorBuilder) Send(ctx echo.Context) error {
+func (b *ErrorBuilder) Send(ctx *echo.Context) error {
 	status, payload := buildErrorResponse(b.err)
 	return ctx.JSON(status, payload)
 }
